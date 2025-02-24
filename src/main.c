@@ -5,9 +5,9 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#define CURRENT_DIR "."
-#define DISPLAY_HIDDEN 1
-#define TRAVERSE_FAILURE -1
+#define CURRENT_DIR        "."
+#define DISPLAY_HIDDEN     1
+#define TRAVERSE_FAILURE  -1
 #define NOT_DISPLAY_HIDDEN 0
 
 int traverse(const char* path, int is_hidden_display) {
@@ -15,7 +15,8 @@ int traverse(const char* path, int is_hidden_display) {
   struct dirent *pd;
   
   if (dir == NULL) {
-    fprintf(stderr, "Can't open dir!\n");
+    fprintf(stderr, "opendir: ");
+    perror("dir: ");
     return TRAVERSE_FAILURE;
   }
 
@@ -28,24 +29,38 @@ int traverse(const char* path, int is_hidden_display) {
   printf("\n");
   
   closedir(dir);
+  
   return 0;
 }
 
 int main(int argc, char** argv) {
   int status;
+  char program_name[256];
+  strcpy(program_name, argv[0]);
   
   /* TODO: Rewrite this to switch-case statment */
-  if (argc == 2 && (strcmp(argv[1], "-a") == 0))
-     status = traverse(CURRENT_DIR, DISPLAY_HIDDEN);
-  else if (argc == 2)
-    status = traverse(argv[1], NOT_DISPLAY_HIDDEN);
-  if (argc == 3 && (strcmp(argv[2], "-a") == 0))	
-    status = traverse(argv[1], DISPLAY_HIDDEN);
-  else
+  switch (argc) {
+  case 1:
     status = traverse(CURRENT_DIR, NOT_DISPLAY_HIDDEN);
-  
-  if (status == TRAVERSE_FAILURE)
-    exit(1);
+    break;
+  case 2:
+    if (strcmp(argv[1], "help") == 0) {
+      if (program_name == NULL) { /* if (!program_name) alternative */
+	fprintf(stderr, "Program name is NULL\n");
+      }
+      printf("  Help:                             \
+              \n\tUsage: %s filename		\
+              \n\t-a display hidden files.		\
+	     \n");
+    }
+    else if (strcmp(argv[1], "-a") == 0) {
+      status = traverse(CURRENT_DIR, DISPLAY_HIDDEN);
+      break;
+    } else if (*argv[1] == '-') {
+      fprintf(stderr, "Undefined flag: %s. Use help.\n", argv[1]);
+      exit(1);
+    }
+  }
   
   return 0;
 }
